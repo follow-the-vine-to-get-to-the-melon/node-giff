@@ -16,6 +16,7 @@ program
   .version('0.0.7')
   .usage('[options] [<commit>] [--] [<path>...]')
   .option('--cached', 'show diff of staging files')
+  .option('--no-index', 'compare two paths on the filesystem')
   .parse(process.argv);
 
 // judge options
@@ -24,13 +25,20 @@ if (program.cached) {
   options.push('--cached');
 }
 
+// instead of using `program.noIndex"
+// they call them "negatable boolean and flag|value"
+// when using "--no-OPTION" option, the default value of OPTION is false
+if (!program.index) {
+  options.push('--no-index')
+}
+
 // init output file
 const realPath = fs.realpathSync(__dirname);
 const output = fs.createWriteStream(`${realPath}/dest/diff.js`)
 output.write('var lineDiffExample="');
 
 // git diff
-const giff = spawn('git', ['diff'].concat(program.args).concat(options));
+const giff = spawn('git', ['diff'].concat(options).concat(program.args));
 giff.stdout.on('data', function (data) {
   // encode to JSON to get escaping
   const encoded = JSON.stringify(data.toString());
